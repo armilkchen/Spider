@@ -7,9 +7,10 @@ import random
 import channel   #这是我们第一个程序爬取的链接信息
 
 headers = {
-    'User-Agent': 'Mozilla/5.0(Macintosh;Intel Mac OS X 10_13_3)AppleWebKit/537.36(KHTML,like Gecko)Chrome/65.0.3325.162 Safari/537.36',
+    'Host': 'book.douban.com',
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36'
 }
-max_page = 10
+max_page = 5
 
 db = pymysql.connect(host='localhost', user='root', password='25015557', db="spiders", port=3306)
 cursor = db.cursor()
@@ -29,7 +30,7 @@ cursor.execute(sql)  # 执行sql语句，新建一个allbooks的数据table
 
 def parse_page(url):
 
-    wb_data = requests.get(url)
+    wb_data = requests.get(url, headers=headers)
     soup = BeautifulSoup(wb_data.text, "lxml")
     tag = url.split("/")[4].split("?")[0]
     for items in soup.find_all(attrs={'class': 'subject-item'}):
@@ -74,11 +75,19 @@ def get_page(page,base_url):
 
 if __name__ == '__main__':
     start = time.perf_counter()
+    a=0
     for urls in channel.channels:
-        for page in range(0, max_page + 1):
-            url = get_page(page * 20, urls+"?")
-            result = parse_page(url)
-            time.sleep(int(format(random.randint(2, 8)))) # 设置随机等待时间
+        if a<10:
+            for page in range(0, max_page + 1):
+                url = get_page(page * 20, urls + "?")
+                result = parse_page(url)
+                time.sleep(int(format(random.randint(2, 8))))  # 设置随机等待时间
+            a+=1
+        else:
+            a=0
+            time.sleep(int(format(random.randint(600, 1800))))
+
+
 
     end = time.perf_counter()  # 设置一个时钟，这样我们就能知道我们爬取了多长时间了
     print('Time Usage:', end - start)  # 爬取结束，输出爬取时间
